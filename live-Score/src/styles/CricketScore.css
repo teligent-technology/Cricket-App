@@ -1,3 +1,4 @@
+/* ====== Body and Global styles ====== */
 body {
   margin: 0;
   padding: 0;
@@ -11,6 +12,7 @@ body {
   color: white;
 }
 
+/* ====== Heading Section ====== */
 .heading {
   text-align: center;
   margin-bottom: 2rem;
@@ -30,11 +32,17 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
+/* Rotate animation for heading image */
 @keyframes rotate {
-  from { transform: rotate(0); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
+/* ====== Search Bar ====== */
 .searchBar {
   display: flex;
   justify-content: center;
@@ -74,12 +82,14 @@ body {
   background: #ffe600;
 }
 
+/* ====== Score Container - Cards Grid ====== */
 .score-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
   gap: 2rem;
 }
 
+/* ====== Individual Match Card ====== */
 .card {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
@@ -101,11 +111,13 @@ body {
   margin-bottom: 0.5rem;
 }
 
+.card h4,
 .card h5 {
   color: #ccc;
   margin-bottom: 1rem;
 }
 
+/* ====== Teams inside each card ====== */
 .teams {
   display: flex;
   justify-content: space-around;
@@ -125,11 +137,13 @@ body {
   transform: scale(1.2);
 }
 
+/* ====== Match Status ====== */
 .status {
   color: #00ff88;
   font-weight: bold;
 }
 
+/* ====== No Matches Found message ====== */
 .not-found {
   text-align: center;
   font-size: 1.2rem;
@@ -137,7 +151,7 @@ body {
   margin-top: 2rem;
 }
 
-/* Spinner */
+/* ====== Loader Spinner ====== */
 .loader {
   border: 5px solid rgba(255, 255, 255, 0.1);
   border-top: 5px solid #ffd700;
@@ -152,4 +166,35 @@ body {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* ====== Match Section Titles ====== */
+.match-section {
+  margin-top: 30px;
+}
+
+.match-section h2 {
+  margin-bottom: 16px;
+  border-bottom: 2px solid #444;
+  padding-bottom: 6px;
+}
+
+/* ====== Upcoming Matches Card Style ====== */
+.card.upcoming {
+  opacity: 0.7;
+  border: 1px dashed #888;
+}
+
+/* ====== Error message styling ====== */
+.error {
+  color: #ff4d4d;
+  margin: 12px 0;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* ====== Search bar container flex adjustment (if needed) ====== */
+.searchBar {
+  display: flex;
+  align-items: center;
 }
