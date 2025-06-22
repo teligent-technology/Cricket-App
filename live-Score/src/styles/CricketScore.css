@@ -198,3 +198,20 @@ body {
   display: flex;
   align-items: center;
 }
+
+
+.searchBar button {
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 30px;
+  background: #ffd700;
+  color: black;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.searchBar button:hover {
+  transform: scale(1.05);
+  background: #ffe600;
+}
