@@ -368,19 +368,41 @@ const CricketScore = () => {
             </p>
           )}
 
-          {/* Bookmarked Matches Section */}
+          {/* Bookmarked Matches Section with Clear All */}
           {bookmarks.length > 0 && (
             <>
               <h2 className="bookmark-title" tabIndex={0}>
                 ⭐ Bookmarked Matches
+                <button
+                  onClick={() => {
+                    if (window.confirm("Are you sure you want to clear all bookmarks?")) {
+                      setBookmarks([]);
+                    }
+                  }}
+                  aria-label="Clear all bookmarks"
+                  style={{ marginLeft: "10px", cursor: "pointer" }}
+                >
+                  Clear All
+                </button>
               </h2>
               <section className="score-container">
                 {bookmarks.map((match) => (
-                  <article className="card bookmarked" key={`bm-${match.id}`}>
+                  <article
+                    className="card bookmarked"
+                    key={`bm-${match.id}`}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`Bookmarked match between ${match.t1} and ${match.t2}, status: ${match.status}`}
+                    onClick={() => setModalMatch(match)}
+                    onKeyDown={(e) => e.key === "Enter" && setModalMatch(match)}
+                  >
                     <div className="card-header">
                       <h3>{match.series}</h3>
                       <button
-                        onClick={() => toggleBookmark(match)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleBookmark(match);
+                        }}
                         className="bookmark-btn bookmarked"
                         title="Remove Bookmark"
                         aria-label="Remove Bookmark"
@@ -416,7 +438,10 @@ const CricketScore = () => {
                     <p className="status">{match.status}</p>
                     <button
                       className="share-btn"
-                      onClick={() => shareMatch(match)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        shareMatch(match);
+                      }}
                       aria-label={`Share bookmarked match ${match.t1} vs ${match.t2}`}
                     >
                       🔗 Share
@@ -429,7 +454,7 @@ const CricketScore = () => {
         </>
       )}
 
-      {/* Modal for detailed match info */}
+      {/* Modal for detailed match info with extra details */}
       {modalMatch && (
         <div
           className="modal-overlay"
@@ -457,6 +482,12 @@ const CricketScore = () => {
             <h2 id="modalTitle">{modalMatch.series} - {modalMatch.matchType}</h2>
             <h3>{modalMatch.t1} vs {modalMatch.t2}</h3>
             <p><strong>Status:</strong> {modalMatch.status}</p>
+
+            {/* Extra details if available */}
+            {modalMatch.venue && <p><strong>Venue:</strong> {modalMatch.venue}</p>}
+            {modalMatch.toss && <p><strong>Toss:</strong> {modalMatch.toss}</p>}
+            {modalMatch.umpires && <p><strong>Umpires:</strong> {modalMatch.umpires}</p>}
+            
             <div className="teams">
               <div>
                 <img
