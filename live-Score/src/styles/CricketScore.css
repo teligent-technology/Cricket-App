@@ -1,0 +1,155 @@
+body {
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(to right, #2c3e50, #4ca1af);
+  font-family: "Segoe UI", sans-serif;
+  overflow-x: hidden;
+}
+
+.main-container {
+  padding: 2rem;
+  color: white;
+}
+
+.heading {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.heading img {
+  width: 80px;
+  animation: rotate 12s linear infinite;
+  border-radius: 50%;
+  margin-bottom: 10px;
+}
+
+.heading h2 {
+  font-size: 2rem;
+  background: -webkit-linear-gradient(#fff, #ffd700);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0); }
+  to { transform: rotate(360deg); }
+}
+
+.searchBar {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.searchBar input {
+  padding: 0.8rem 1.2rem;
+  width: 250px;
+  border: none;
+  border-radius: 50px;
+  outline: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.searchBar input:focus {
+  box-shadow: 0 0 15px #ffd700;
+  transform: scale(1.05);
+}
+
+.searchBar button {
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 30px;
+  background: #ffd700;
+  color: black;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.searchBar button:hover {
+  transform: scale(1.05);
+  background: #ffe600;
+}
+
+.score-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 2rem;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 1.5rem;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.card:hover {
+  transform: translateY(-10px) scale(1.02);
+  box-shadow: 0 12px 30px rgba(255, 255, 255, 0.3);
+}
+
+.card h3 {
+  color: #ffd700;
+  margin-bottom: 0.5rem;
+}
+
+.card h5 {
+  color: #ccc;
+  margin-bottom: 1rem;
+}
+
+.teams {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.teams img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+}
+
+.teams img:hover {
+  transform: scale(1.2);
+}
+
+.status {
+  color: #00ff88;
+  font-weight: bold;
+}
+
+.not-found {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #f0f0f0;
+  margin-top: 2rem;
+}
+
+/* Spinner */
+.loader {
+  border: 5px solid rgba(255, 255, 255, 0.1);
+  border-top: 5px solid #ffd700;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  animation: spin 1s linear infinite;
+  margin: 100px auto;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
