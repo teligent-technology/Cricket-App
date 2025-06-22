@@ -1,36 +1,38 @@
 body {
   margin: 0;
   padding: 0;
-  background: linear-gradient(to right, #2c3e50, #4ca1af);
   font-family: "Segoe UI", sans-serif;
+  background: linear-gradient(to bottom right, #0f2027, #203a43, #2c5364);
+  color: white;
   overflow-x: hidden;
 }
 
 .main-container {
   padding: 2rem;
-  color: white;
+  min-height: 100vh;
 }
 
 .heading {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
 }
 
 .heading img {
   width: 80px;
-  animation: rotate 12s linear infinite;
   border-radius: 50%;
+  animation: spinLogo 10s linear infinite;
   margin-bottom: 10px;
 }
 
-.heading h2 {
-  font-size: 2rem;
-  background: -webkit-linear-gradient(#fff, #ffd700);
+.heading h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(to right, #00c6ff, #0072ff);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  font-weight: bold;
 }
 
-@keyframes rotate {
+@keyframes spinLogo {
   from { transform: rotate(0); }
   to { transform: rotate(360deg); }
 }
@@ -39,76 +41,83 @@ body {
   display: flex;
   justify-content: center;
   gap: 1rem;
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
   flex-wrap: wrap;
 }
 
 .searchBar input {
   padding: 0.8rem 1.2rem;
-  width: 250px;
-  border: none;
+  width: 260px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
   border-radius: 50px;
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
   outline: none;
   transition: all 0.3s ease;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.searchBar input::placeholder {
+  color: #ccc;
 }
 
 .searchBar input:focus {
-  box-shadow: 0 0 15px #ffd700;
-  transform: scale(1.05);
+  border-color: #00c6ff;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .searchBar button {
-  padding: 0.8rem 1.5rem;
+  padding: 0.8rem 1.4rem;
   border: none;
   border-radius: 30px;
-  background: #ffd700;
-  color: black;
+  background: linear-gradient(to right, #00c6ff, #0072ff);
+  color: white;
   font-weight: bold;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease;
 }
 
 .searchBar button:hover {
   transform: scale(1.05);
-  background: #ffe600;
 }
 
 .score-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 2rem;
 }
 
 .card {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(15px);
   border-radius: 20px;
   padding: 1.5rem;
+  box-shadow: 0 10px 30px rgba(0, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.15);
   text-align: center;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
 }
 
 .card:hover {
-  transform: translateY(-10px) scale(1.02);
-  box-shadow: 0 12px 30px rgba(255, 255, 255, 0.3);
+  transform: scale(1.02);
+  box-shadow: 0 15px 40px rgba(0, 255, 255, 0.3);
 }
 
 .card h3 {
-  color: #ffd700;
-  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+  color: #00c6ff;
+  margin-bottom: 0.3rem;
 }
 
-.card h5 {
-  color: #ccc;
+.card h4 {
+  font-size: 1rem;
+  color: #aaa;
   margin-bottom: 1rem;
 }
 
 .teams {
   display: flex;
-  justify-content: space-around;
+  justify-content: space-evenly;
+  align-items: center;
   margin-bottom: 1rem;
   flex-wrap: wrap;
   gap: 1rem;
@@ -119,28 +128,35 @@ body {
   height: 60px;
   border-radius: 50%;
   transition: transform 0.3s ease;
+  border: 2px solid #00c6ff;
 }
 
 .teams img:hover {
   transform: scale(1.2);
 }
 
+.teams p {
+  margin: 5px 0;
+  font-size: 0.9rem;
+}
+
 .status {
   color: #00ff88;
-  font-weight: bold;
+  font-weight: 600;
+  margin-top: 1rem;
 }
 
 .not-found {
   text-align: center;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   color: #f0f0f0;
-  margin-top: 2rem;
+  margin-top: 3rem;
 }
 
-/* Spinner */
+/* Loader */
 .loader {
-  border: 5px solid rgba(255, 255, 255, 0.1);
-  border-top: 5px solid #ffd700;
+  border: 6px solid rgba(255, 255, 255, 0.1);
+  border-top: 6px solid #00c6ff;
   border-radius: 50%;
   width: 60px;
   height: 60px;
