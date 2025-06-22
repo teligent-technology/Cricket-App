@@ -1,13 +1,14 @@
 import React, { useEffect, useState, useRef } from "react";
 import "../styles/CricketScore.css";
 
+// Constants for filters
 const MATCH_TYPES = ["All", "T20", "ODI", "Test"];
 const DATE_FILTERS = ["All", "Today", "Ongoing", "Completed"];
 
 const formatDate = (date) => date.toISOString().split("T")[0];
 
 const CricketScore = () => {
-  // States
+  // --- States ---
   const [data, setData] = useState([]);
   const [debouncedInput, setDebouncedInput] = useState("");
   const [search, setSearch] = useState("");
@@ -20,11 +21,13 @@ const CricketScore = () => {
   const [error, setError] = useState(null);
   const [modalMatch, setModalMatch] = useState(null);
 
-  // Refs
+  // --- Refs ---
   const prevMatchIds = useRef(new Set());
   const scoreContainerRef = useRef(null);
 
-  // Load localStorage data on mount
+  // --- Effects ---
+
+  // Load saved data on mount (bookmarks, dark mode, filters, cached matches)
   useEffect(() => {
     const savedBookmarks = JSON.parse(localStorage.getItem("bookmarkedMatches") || "[]");
     setBookmarks(savedBookmarks);
@@ -43,19 +46,19 @@ const CricketScore = () => {
     if (savedData) setData(JSON.parse(savedData));
   }, []);
 
-  // Save bookmarks
+  // Persist bookmarks
   useEffect(() => {
     localStorage.setItem("bookmarkedMatches", JSON.stringify(bookmarks));
   }, [bookmarks]);
 
-  // Save dark mode & toggle body class
+  // Persist dark mode setting and toggle body class
   useEffect(() => {
     localStorage.setItem("darkMode", darkMode.toString());
     if (darkMode) document.body.classList.add("dark-mode");
     else document.body.classList.remove("dark-mode");
   }, [darkMode]);
 
-  // Save filters
+  // Persist filters
   useEffect(() => {
     localStorage.setItem("filterType", filterType);
   }, [filterType]);
@@ -71,20 +74,21 @@ const CricketScore = () => {
 
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
+
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
   }, []);
 
-  // Notification permission request on mount
+  // Request Notification permission once
   useEffect(() => {
     if ("Notification" in window && Notification.permission !== "granted") {
       Notification.requestPermission();
     }
   }, []);
 
-  // Debounce search input
+  // Debounce search input by 500ms
   useEffect(() => {
     const handler = setTimeout(() => {
       setSearch(debouncedInput.trim());
@@ -92,11 +96,12 @@ const CricketScore = () => {
     return () => clearTimeout(handler);
   }, [debouncedInput]);
 
-  // Fetch data
+  // Fetch data function
   const getData = async (searchQuery = "") => {
     try {
       setLoading(true);
       setError(null);
+
       const url = searchQuery
         ? `https://api.cricapi.com/v1/cricScore?apikey=0328c2e4-976d-4f98-a46c-16b370991bbc&search=${encodeURIComponent(searchQuery)}`
         : `https://api.cricapi.com/v1/cricScore?apikey=0328c2e4-976d-4f98-a46c-16b370991bbc`;
@@ -106,7 +111,7 @@ const CricketScore = () => {
 
       const result = await response.json();
 
-      // Notifications for new matches starting
+      // Notify on new matches started
       if (result.data) {
         result.data.forEach((match) => {
           if (
@@ -131,7 +136,7 @@ const CricketScore = () => {
     }
   };
 
-  // Initial fetch and on search change
+  // Initial fetch and fetch on search change
   useEffect(() => {
     getData(search);
   }, [search]);
@@ -158,12 +163,12 @@ const CricketScore = () => {
     return true;
   });
 
-  // Autocomplete suggestions from current data
+  // Autocomplete suggestions for search
   const suggestions = Array.from(
     new Set(data.flatMap((m) => [m.series, m.t1, m.t2].filter(Boolean).map((s) => s.toLowerCase())))
   );
 
-  // Toggle bookmark
+  // Toggle bookmark for a match
   const toggleBookmark = (match) => {
     const exists = bookmarks.find((b) => b.id === match.id);
     if (exists) {
@@ -183,7 +188,7 @@ const CricketScore = () => {
     }
   };
 
-  // Auto-scroll to first ongoing match
+  // Auto scroll to first ongoing match on filteredData change
   useEffect(() => {
     if (scoreContainerRef.current) {
       const ongoingIdx = filteredData.findIndex((m) =>
@@ -198,14 +203,17 @@ const CricketScore = () => {
     }
   }, [filteredData]);
 
+  // --- Render JSX ---
   return (
     <div className="main-container" role="main">
+      {/* Offline Warning */}
       {isOffline && (
         <div className="offline-warning" role="alert">
           ⚠️ You are offline. Check your connection.
         </div>
       )}
 
+      {/* Top bar: Search + Filters + Dark Mode toggle */}
       <header className="top-bar" role="region" aria-label="Search and filters">
         <div className="searchBar">
           <input
@@ -264,17 +272,20 @@ const CricketScore = () => {
         </button>
       </header>
 
+      {/* App Heading */}
       <div className="heading" aria-label="App Title and Logo">
         <img src="/Circle/circle.jpg" alt="App Logo" />
         <h1 tabIndex={0}>⚡️ Live Cricket Score</h1>
       </div>
 
+      {/* Error message */}
       {error && (
         <div className="error-message" role="alert">
           ⚠️ Error: {error}
         </div>
       )}
 
+      {/* Loading skeleton or data */}
       {loading ? (
         <div className="loader-skeleton-container" aria-busy="true" aria-live="polite">
           {[...Array(6)].map((_, i) => (
@@ -283,6 +294,7 @@ const CricketScore = () => {
         </div>
       ) : (
         <>
+          {/* Matches list */}
           {filteredData.length > 0 ? (
             <main className="score-container" ref={scoreContainerRef}>
               {filteredData.map(
@@ -322,7 +334,9 @@ const CricketScore = () => {
                           {bookmarks.find((b) => b.id === match.id) ? "★" : "☆"}
                         </button>
                       </div>
+
                       <h4>{match.matchType}</h4>
+
                       <div className="teams">
                         <div>
                           <img
@@ -347,7 +361,9 @@ const CricketScore = () => {
                           <p>{match.t2s}</p>
                         </div>
                       </div>
+
                       <p className="status">{match.status}</p>
+
                       <button
                         className="share-btn"
                         onClick={(e) => {
@@ -368,41 +384,19 @@ const CricketScore = () => {
             </p>
           )}
 
-          {/* Bookmarked Matches Section with Clear All */}
+          {/* Bookmarked Matches Section */}
           {bookmarks.length > 0 && (
             <>
               <h2 className="bookmark-title" tabIndex={0}>
                 ⭐ Bookmarked Matches
-                <button
-                  onClick={() => {
-                    if (window.confirm("Are you sure you want to clear all bookmarks?")) {
-                      setBookmarks([]);
-                    }
-                  }}
-                  aria-label="Clear all bookmarks"
-                  style={{ marginLeft: "10px", cursor: "pointer" }}
-                >
-                  Clear All
-                </button>
               </h2>
               <section className="score-container">
                 {bookmarks.map((match) => (
-                  <article
-                    className="card bookmarked"
-                    key={`bm-${match.id}`}
-                    tabIndex={0}
-                    role="button"
-                    aria-label={`Bookmarked match between ${match.t1} and ${match.t2}, status: ${match.status}`}
-                    onClick={() => setModalMatch(match)}
-                    onKeyDown={(e) => e.key === "Enter" && setModalMatch(match)}
-                  >
+                  <article className="card bookmarked" key={`bm-${match.id}`}>
                     <div className="card-header">
                       <h3>{match.series}</h3>
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleBookmark(match);
-                        }}
+                        onClick={() => toggleBookmark(match)}
                         className="bookmark-btn bookmarked"
                         title="Remove Bookmark"
                         aria-label="Remove Bookmark"
@@ -410,7 +404,9 @@ const CricketScore = () => {
                         ★
                       </button>
                     </div>
+
                     <h4>{match.matchType}</h4>
+
                     <div className="teams">
                       <div>
                         <img
@@ -435,13 +431,12 @@ const CricketScore = () => {
                         <p>{match.t2s}</p>
                       </div>
                     </div>
+
                     <p className="status">{match.status}</p>
+
                     <button
                       className="share-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        shareMatch(match);
-                      }}
+                      onClick={() => shareMatch(match)}
                       aria-label={`Share bookmarked match ${match.t1} vs ${match.t2}`}
                     >
                       🔗 Share
@@ -454,7 +449,7 @@ const CricketScore = () => {
         </>
       )}
 
-      {/* Modal for detailed match info with extra details */}
+      {/* Modal for detailed match info */}
       {modalMatch && (
         <div
           className="modal-overlay"
@@ -467,11 +462,7 @@ const CricketScore = () => {
             if (e.key === "Escape") setModalMatch(null);
           }}
         >
-          <div
-            className="modal-content"
-            onClick={(e) => e.stopPropagation()}
-            tabIndex={0}
-          >
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} tabIndex={0}>
             <button
               className="modal-close"
               onClick={() => setModalMatch(null)}
@@ -479,15 +470,15 @@ const CricketScore = () => {
             >
               &times;
             </button>
-            <h2 id="modalTitle">{modalMatch.series} - {modalMatch.matchType}</h2>
-            <h3>{modalMatch.t1} vs {modalMatch.t2}</h3>
-            <p><strong>Status:</strong> {modalMatch.status}</p>
-
-            {/* Extra details if available */}
-            {modalMatch.venue && <p><strong>Venue:</strong> {modalMatch.venue}</p>}
-            {modalMatch.toss && <p><strong>Toss:</strong> {modalMatch.toss}</p>}
-            {modalMatch.umpires && <p><strong>Umpires:</strong> {modalMatch.umpires}</p>}
-            
+            <h2 id="modalTitle">
+              {modalMatch.series} - {modalMatch.matchType}
+            </h2>
+            <h3>
+              {modalMatch.t1} vs {modalMatch.t2}
+            </h3>
+            <p>
+              <strong>Status:</strong> {modalMatch.status}
+            </p>
             <div className="teams">
               <div>
                 <img
@@ -497,7 +488,9 @@ const CricketScore = () => {
                   height={80}
                 />
                 <p>{modalMatch.t1}</p>
-                <p><strong>Score:</strong> {modalMatch.t1s || "N/A"}</p>
+                <p>
+                  <strong>Score:</strong> {modalMatch.t1s || "N/A"}
+                </p>
               </div>
               <div>
                 <img
@@ -507,11 +500,15 @@ const CricketScore = () => {
                   height={80}
                 />
                 <p>{modalMatch.t2}</p>
-                <p><strong>Score:</strong> {modalMatch.t2s || "N/A"}</p>
+                <p>
+                  <strong>Score:</strong> {modalMatch.t2s || "N/A"}
+                </p>
               </div>
             </div>
 
-            <p><em>More detailed match info coming soon...</em></p>
+            <p>
+              <em>More detailed match info coming soon...</em>
+            </p>
           </div>
         </div>
       )}
