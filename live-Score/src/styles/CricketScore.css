@@ -1,4 +1,5 @@
-/* Base styles */
+/* ------------------ Base Styles ------------------ */
+
 body {
   margin: 0;
   padding: 0;
@@ -30,7 +31,19 @@ body.dark-mode {
   border-radius: 8px;
 }
 
-/* Top bar: search, filter, dark toggle */
+/* Error message */
+.error-message {
+  background-color: #800000;
+  padding: 1rem 2rem;
+  text-align: center;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  color: #fff;
+}
+
+/* ------------------ Top Bar (Search + Filters + Dark Toggle) ------------------ */
+
 .top-bar {
   display: flex;
   flex-wrap: wrap;
@@ -116,7 +129,8 @@ body.dark-mode {
   color: #222;
 }
 
-/* Heading */
+/* ------------------ Heading ------------------ */
+
 .heading {
   text-align: center;
   margin-bottom: 2.5rem;
@@ -146,14 +160,14 @@ body.dark-mode {
   }
 }
 
-/* Score container grid */
+/* ------------------ Score Container & Cards ------------------ */
+
 .score-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 2rem;
 }
 
-/* Card styles */
 .card {
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(14px);
@@ -164,6 +178,7 @@ body.dark-mode {
   border: 1px solid rgba(255, 255, 255, 0.15);
   text-align: center;
   position: relative;
+  cursor: pointer;
 }
 
 .card:hover {
@@ -185,6 +200,7 @@ body.dark-mode {
   font-weight: 700;
 }
 
+/* Bookmark button */
 .bookmark-btn {
   background: transparent;
   border: none;
@@ -252,6 +268,37 @@ body.dark-mode {
   margin-top: 0.8rem;
 }
 
+/* Share button */
+.share-btn {
+  margin-top: 0.8rem;
+  background: transparent;
+  border: none;
+  color: #00c6ff;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.share-btn:hover {
+  color: #00ff88;
+}
+
+/* Bookmarked card special styling */
+.card.bookmarked {
+  border-color: #ffd700;
+  box-shadow: 0 10px 35px rgba(255, 215, 0, 0.3);
+}
+
+/* Bookmarked section title */
+.bookmark-title {
+  margin-top: 3rem;
+  margin-bottom: 1.5rem;
+  color: #ffd700;
+  text-align: center;
+  font-weight: 900;
+  font-size: 1.8rem;
+}
+
 /* No matches found */
 .not-found {
   text-align: center;
@@ -260,7 +307,8 @@ body.dark-mode {
   margin-top: 3rem;
 }
 
-/* Loader skeleton */
+/* ------------------ Loader Skeleton ------------------ */
+
 .loader-skeleton-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -289,19 +337,81 @@ body.dark-mode {
   }
 }
 
-/* Responsive tweaks */
+/* ------------------ Modal Styles ------------------ */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.modal-content {
+  background: rgba(30, 30, 30, 0.95);
+  padding: 2rem;
+  border-radius: 15px;
+  max-width: 480px;
+  width: 90%;
+  color: #eee;
+  box-shadow: 0 0 20px #00c6ff;
+  outline: none;
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  background: transparent;
+  border: none;
+  font-size: 2rem;
+  color: #00c6ff;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.modal-close:hover {
+  color: #00ff88;
+}
+
+/* Modal teams inside modal */
+.modal-content .teams {
+  justify-content: space-around;
+  margin-top: 1rem;
+}
+
+.modal-content .teams div {
+  flex: 1 1 140px;
+  min-width: 140px;
+}
+
+.modal-content .teams img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid #00c6ff;
+  object-fit: cover;
+}
+
+/* ------------------ Responsive ------------------ */
+
 @media (max-width: 600px) {
   .top-bar {
     flex-direction: column;
     gap: 1rem;
   }
-  .searchBar input {
-    width: 100%;
-  }
-  .filter-select {
-    width: 100%;
-  }
+
+  .searchBar input,
+  .filter-select,
   .dark-mode-toggle {
     width: 100%;
+  }
+
+  .teams {
+    flex-direction: column;
   }
 }
