@@ -3,6 +3,33 @@ import "../styles/CricketScore.css";
 
 const MATCH_TYPES = ["All", "T20", "ODI", "Test"];
 const STATUS_FILTERS = ["Ongoing Matches", "Upcoming Matches"];
+const SORT_OPTIONS = ["Latest First", "Oldest First"];
+
+const ITEMS_PER_PAGE = 10;
+
+const Countdown = ({ targetDate }) => {
+  const [timeLeft, setTimeLeft] = useState("");
+
+  useEffect(() => {
+    const updateTimer = () => {
+      const now = new Date();
+      const diff = new Date(targetDate) - now;
+      if (diff <= 0) {
+        setTimeLeft("Started");
+        return;
+      }
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff / (1000 * 60)) % 60);
+      const seconds = Math.floor((diff / 1000) % 60);
+      setTimeLeft(`${hours}h ${minutes}m ${seconds}s`);
+    };
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [targetDate]);
+
+  return <span>{timeLeft}</span>;
+};
 
 const CricketScore = () => {
   const [data, setData] = useState([]);
@@ -14,16 +41,23 @@ const CricketScore = () => {
   const [error, setError] = useState(null);
   const [copySuccess, setCopySuccess] = useState("");
   const [favorites, setFavorites] = useState(() => {
-    // Load favorites from localStorage
     const saved = localStorage.getItem("favoriteMatches");
     return saved ? JSON.parse(saved) : [];
   });
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem("darkMode");
-    return saved ? JSON.parse(saved) : false;
+    if (saved !== null) return JSON.parse(saved);
+
+    // Auto detect system preference on first load
+    if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      return true;
+    }
+    return false;
   });
   const [lastUpdated, setLastUpdated] = useState(null);
   const [modalMatch, setModalMatch] = useState(null);
+  const [sortOption, setSortOption] = useState(SORT_OPTIONS[0]);
+  const [page, setPage] = useState(1);
 
   const liveMatchIdsRef = useRef(new Set());
 
@@ -31,6 +65,7 @@ const CricketScore = () => {
   useEffect(() => {
     const handler = setTimeout(() => {
       setSearch(inputData.trim());
+      setPage(1); // reset page on new search
     }, 500);
     return () => clearTimeout(handler);
   }, [inputData]);
@@ -130,7 +165,7 @@ const CricketScore = () => {
     );
   });
 
-  const filteredData = filteredByType.filter((match) => {
+  const filteredByStatus = filteredByType.filter((match) => {
     if (statusFilter === "Ongoing Matches") {
       return match.status && match.status !== "Match not started";
     }
@@ -140,10 +175,25 @@ const CricketScore = () => {
     return true;
   });
 
+  // Sort filtered data by date/time
+  const sortedData = [...filteredByStatus].sort((a, b) => {
+    const dateA = a.dateTimeGMT ? new Date(a.dateTimeGMT).getTime() : 0;
+    const dateB = b.dateTimeGMT ? new Date(b.dateTimeGMT).getTime() : 0;
+    if (sortOption === "Latest First") {
+      return dateB - dateA;
+    } else {
+      return dateA - dateB;
+    }
+  });
+
+  // Pagination / Infinite scroll data slice
+  const pagedData = sortedData.slice(0, page * ITEMS_PER_PAGE);
+
   // Copy match info to clipboard
   const copyMatchToClipboard = async (match) => {
     try {
-      const textToCopy = `Match: ${match.series}\nType: ${match.matchType}\nTeams: ${match.t1} vs ${match.t2}\nStatus: ${match.status}`;
+      const shareURL = `${window.location.origin}?matchId=${match.id}`;
+      const textToCopy = `Match: ${match.series}\nType: ${match.matchType}\nTeams: ${match.t1} vs ${match.t2}\nStatus: ${match.status}\nLink: ${shareURL}`;
       await navigator.clipboard.writeText(textToCopy);
       setCopySuccess(`Copied match info of "${match.series}"!`);
       setTimeout(() => setCopySuccess(""), 3000);
@@ -165,9 +215,17 @@ const CricketScore = () => {
   // Match status color
   const getStatusColor = (status) => {
     if (!status) return "gray";
-    if (status.toLowerCase().includes("live") || status.toLowerCase().includes("ongoing")) return "#00ff88"; // green
+    if (
+      status.toLowerCase().includes("live") ||
+      status.toLowerCase().includes("ongoing")
+    )
+      return "#00ff88"; // green
     if (status.toLowerCase().includes("match not started")) return "#aaa"; // gray
-    if (status.toLowerCase().includes("won") || status.toLowerCase().includes("draw")) return "#f44336"; // red
+    if (
+      status.toLowerCase().includes("won") ||
+      status.toLowerCase().includes("draw")
+    )
+      return "#f44336"; // red
     return "white";
   };
 
@@ -182,14 +240,64 @@ const CricketScore = () => {
     return new Date(date).toLocaleString();
   };
 
+  // Load more handler for infinite scroll
+  const loadMore = () => {
+    setPage((p) => p + 1);
+  };
+
+  // Accessibility: trap focus inside modal when open
+  useEffect(() => {
+    if (!modalMatch) return;
+
+    const focusableElements = "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])";
+    const modal = document.getElementById("modal-content");
+    const firstElement = modal.querySelectorAll(focusableElements)[0];
+    const focusableContent = modal.querySelectorAll(focusableElements);
+    const lastElement = focusableContent[focusableContent.length - 1];
+
+    function handleKeyDown(e) {
+      if (e.key === "Tab") {
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement) {
+            e.preventDefault();
+            lastElement.focus();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            e.preventDefault();
+            firstElement.focus();
+          }
+        }
+      } else if (e.key === "Escape") {
+        setModalMatch(null);
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    firstElement.focus();
+
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [modalMatch]);
+
   return (
     <div className={`main-container ${darkMode ? "dark-mode" : ""}`}>
       <div className="animated-background"></div>
 
-      <div className="top-bar" style={{display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom: 20, flexWrap:"wrap"}}>
-        <div className="heading" style={{display:"flex", alignItems:"center", gap: "1rem"}}>
+      <div
+        className="top-bar"
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 20,
+          flexWrap: "wrap",
+        }}
+      >
+        <div
+          className="heading"
+          style={{ display: "flex", alignItems: "center", gap: "1rem" }}
+        >
           <img src="/Circle/circle.jpg" alt="Logo" width="60" />
-          <h1 style={{margin:0, fontSize:"1.8rem"}}>⚡️ Live Cricket Score</h1>
+          <h1 style={{ margin: 0, fontSize: "1.8rem" }}>⚡️ Live Cricket Score</h1>
         </div>
 
         <button
@@ -210,18 +318,30 @@ const CricketScore = () => {
         </button>
       </div>
 
-      <div className="searchBar" style={{ marginBottom: 20, flexWrap: "wrap", display: "flex", gap:"12px" }}>
+      <div
+        className="searchBar"
+        style={{
+          marginBottom: 20,
+          flexWrap: "wrap",
+          display: "flex",
+          gap: "12px",
+        }}
+      >
         <input
           type="text"
           placeholder="🔍 Search Series or Teams..."
           value={inputData}
           onChange={(e) => setInputData(e.target.value)}
           style={{ flexGrow: 1, minWidth: 220, padding: "8px 12px", fontSize: "1rem" }}
+          aria-label="Search series or teams"
         />
 
         <select
           value={matchType}
-          onChange={(e) => setMatchType(e.target.value)}
+          onChange={(e) => {
+            setMatchType(e.target.value);
+            setPage(1);
+          }}
           style={{ padding: "8px 12px", fontSize: "1rem" }}
           aria-label="Filter by Match Type"
         >
@@ -234,7 +354,10 @@ const CricketScore = () => {
 
         <select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          onChange={(e) => {
+            setStatusFilter(e.target.value);
+            setPage(1);
+          }}
           style={{ padding: "8px 12px", fontSize: "1rem" }}
           aria-label="Filter by Match Status"
         >
@@ -244,10 +367,32 @@ const CricketScore = () => {
             </option>
           ))}
         </select>
+
+        <select
+          value={sortOption}
+          onChange={(e) => {
+            setSortOption(e.target.value);
+            setPage(1);
+          }}
+          style={{ padding: "8px 12px", fontSize: "1rem" }}
+          aria-label="Sort matches by date"
+        >
+          {SORT_OPTIONS.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </select>
       </div>
 
       {lastUpdated && (
-        <p style={{ fontSize: "0.9rem", color: darkMode ? "#ccc" : "#555", marginBottom: 12 }}>
+        <p
+          style={{
+            fontSize: "0.9rem",
+            color: darkMode ? "#ccc" : "#555",
+            marginBottom: 12,
+          }}
+        >
           Last updated: {formatDate(lastUpdated)}
         </p>
       )}
@@ -278,6 +423,7 @@ const CricketScore = () => {
               fontWeight: "bold",
               cursor: "pointer",
             }}
+            aria-label="Retry fetching data"
           >
             Retry
           </button>
@@ -305,75 +451,136 @@ const CricketScore = () => {
             </div>
           ))}
         </div>
-      ) : filteredData.length > 0 ? (
-        <div className="score-container">
-          {filteredData.map((match, i) => (
-            <div className="card" key={i}>
-              <h3>{match.series}</h3>
-              <h4>{match.matchType}</h4>
-              <div className="teams" style={{ justifyContent: "center", gap: "1rem" }}>
-                <div>
-                  <img src={match.t1img} alt={match.t1} />
-                  <p>{match.t1}</p>
-                  {match.t1s && <p>{match.t1s}</p>}
-                </div>
-                <div>
-                  <img src={match.t2img} alt={match.t2} />
-                  <p>{match.t2}</p>
-                  {match.t2s && <p>{match.t2s}</p>}
-                </div>
-              </div>
-              <p
-                className="status"
-                style={{ color: getStatusColor(match.status), fontWeight: "bold" }}
+      ) : pagedData.length > 0 ? (
+        <>
+          <div className="score-container">
+            {pagedData.map((match, i) => (
+              <div
+                className="card"
+                key={i}
+                style={{
+                  animation: "fadeIn 0.4s ease",
+                  transition: "transform 0.3s",
+                }}
+                tabIndex={0}
+                aria-label={`Match: ${match.series}, ${match.t1} vs ${match.t2}`}
               >
-                {match.status}
-              </p>
-
-              <div style={{display:"flex", justifyContent:"center", gap:"12px", marginTop: "10px"}}>
-                <button
-                  onClick={() => copyMatchToClipboard(match)}
-                  className="share-button"
-                  aria-label={`Share match info for ${match.series}`}
+                <h3>{match.series}</h3>
+                <h4>{match.matchType}</h4>
+                <div
+                  className="teams"
+                  style={{ justifyContent: "center", gap: "1rem" }}
                 >
-                  Share
-                </button>
+                  <div>
+                    <img src={match.t1img} alt={match.t1} />
+                    <p>{match.t1}</p>
+                    {match.t1s && <p>{match.t1s}</p>}
+                  </div>
+                  <div>
+                    <img src={match.t2img} alt={match.t2} />
+                    <p>{match.t2}</p>
+                    {match.t2s && <p>{match.t2s}</p>}
+                  </div>
+                </div>
 
-                <button
-                  onClick={() => toggleFavorite(match.id)}
-                  aria-label={favorites.includes(match.id) ? "Remove from favorites" : "Add to favorites"}
+                <p
+                  className="status"
                   style={{
-                    background: favorites.includes(match.id) ? "#00ff88" : "#444",
-                    color: favorites.includes(match.id) ? "black" : "white",
-                    border: "none",
-                    padding: "6px 12px",
-                    borderRadius: "20px",
-                    cursor: "pointer",
-                    fontWeight: "bold"
+                    color: getStatusColor(match.status),
+                    fontWeight: "bold",
                   }}
                 >
-                  {favorites.includes(match.id) ? "★ Favorited" : "☆ Favorite"}
-                </button>
+                  {match.status}
+                </p>
 
-                <button
-                  onClick={() => setModalMatch(match)}
-                  aria-label={`View details for ${match.series}`}
+                {/* Countdown for upcoming matches */}
+                {match.status === "Match not started" &&
+                  match.dateTimeGMT && (
+                    <p style={{ fontWeight: "bold", color: darkMode ? "#eee" : "#333" }}>
+                      Starts in: <Countdown targetDate={match.dateTimeGMT} />
+                    </p>
+                  )}
+
+                <div
                   style={{
-                    background: "#007bff",
-                    color: "white",
-                    border: "none",
-                    padding: "6px 12px",
-                    borderRadius: "20px",
-                    cursor: "pointer",
-                    fontWeight: "bold"
+                    display: "flex",
+                    justifyContent: "center",
+                    gap: "12px",
+                    marginTop: "10px",
                   }}
                 >
-                  Details
-                </button>
+                  <button
+                    onClick={() => copyMatchToClipboard(match)}
+                    className="share-button"
+                    aria-label={`Share match info for ${match.series}`}
+                  >
+                    Share
+                  </button>
+
+                  <button
+                    onClick={() => toggleFavorite(match.id)}
+                    aria-label={
+                      favorites.includes(match.id)
+                        ? "Remove from favorites"
+                        : "Add to favorites"
+                    }
+                    style={{
+                      background: favorites.includes(match.id)
+                        ? "#00ff88"
+                        : "#444",
+                      color: favorites.includes(match.id)
+                        ? "black"
+                        : "white",
+                      border: "none",
+                      padding: "6px 12px",
+                      borderRadius: "20px",
+                      cursor: "pointer",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {favorites.includes(match.id) ? "★ Favorited" : "☆ Favorite"}
+                  </button>
+
+                  <button
+                    onClick={() => setModalMatch(match)}
+                    aria-label={`View details for ${match.series}`}
+                    style={{
+                      background: "#007bff",
+                      color: "white",
+                      border: "none",
+                      padding: "6px 12px",
+                      borderRadius: "20px",
+                      cursor: "pointer",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Details
+                  </button>
+                </div>
               </div>
+            ))}
+          </div>
+
+          {/* Load More button */}
+          {pagedData.length < sortedData.length && (
+            <div style={{ textAlign: "center", margin: "1rem 0" }}>
+              <button
+                onClick={loadMore}
+                style={{
+                  padding: "8px 20px",
+                  borderRadius: "30px",
+                  background: "#ffd700",
+                  border: "none",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                }}
+                aria-label="Load more matches"
+              >
+                Load More
+              </button>
             </div>
-          ))}
-        </div>
+          )}
+        </>
       ) : (
         <p className="not-found">⚠️ No Matches Found!</p>
       )}
@@ -392,9 +599,18 @@ const CricketScore = () => {
           }}
         >
           <div
+            id="modal-content"
             className="modal-content"
             onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: 500, margin: "2rem auto", padding: 20, background: darkMode ? "#222" : "#fff", borderRadius: 15, color: darkMode ? "#eee" : "#000" }}
+            style={{
+              maxWidth: 500,
+              margin: "2rem auto",
+              padding: 20,
+              background: darkMode ? "#222" : "#fff",
+              borderRadius: 15,
+              color: darkMode ? "#eee" : "#000",
+              animation: "fadeInScale 0.3s ease",
+            }}
           >
             <h2 id="modal-title">{modalMatch.series}</h2>
             <p>
@@ -437,6 +653,32 @@ const CricketScore = () => {
           </div>
         </div>
       )}
+
+      {/* Animations styles (could be moved to CSS file) */}
+      <style>{`
+        @keyframes fadeIn {
+          from {opacity: 0;}
+          to {opacity: 1;}
+        }
+        @keyframes fadeInScale {
+          0% {opacity: 0; transform: scale(0.8);}
+          100% {opacity: 1; transform: scale(1);}
+        }
+        .card:hover {
+          transform: scale(1.02);
+          box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+          transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .modal-overlay {
+          position: fixed;
+          top:0; left:0; right:0; bottom:0;
+          background: rgba(0,0,0,0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 9999;
+        }
+      `}</style>
     </div>
   );
 };
